@@ -1,4 +1,9 @@
 # mimire
+
+<h3 align="center">
+    <img src="static/mimire_logo.webp" width="300px"></a>
+</h3>
+
 `mimire` is a CLI tool to track and manage network security assessment directories and data. The name comes from the figure in Norse mythology that was known for his knowledge and wisdom to the gods.
 
 ## Motivation
