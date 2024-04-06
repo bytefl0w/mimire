@@ -67,21 +67,35 @@ pub fn main() !void {
     }
 }
 
-//Put all functions below
+fn add_host(args: [][:0]u8) !Host {
+    var new_host = Host{ .os = undefined, .domain = undefined, .access = undefined, .ip_address = undefined, .hostname = undefined };
 
-fn add_host(args: [][:0]u8) !void {
     var arg_i: usize = 2;
     while (arg_i < args.len) : (arg_i += 1) {
         const arg = args[arg_i];
         if (std.mem.startsWith(u8, arg, "-h") or std.mem.startsWith(u8, arg, "--help")) {
             std.debug.print(Add_Usage_Text, .{});
-        } else if (std.mem.startsWith(u8, arg, "") or std.mem.startsWith(u8, arg, "")) {
-            std.debug.print("TODO");
+        } else if (std.mem.startsWith(u8, arg, "-i") or std.mem.startsWith(u8, arg, "--ip-address")) {
+            new_host.ip_address = args[arg_i + 1];
+            arg_i += 2;
+        } else if (std.mem.startsWith(u8, arg, "-d") or std.mem.startsWith(u8, arg, "--domain")) {
+            new_host.domain = args[arg_i + 1];
+            arg_i += 2;
+        } else if (std.mem.startsWith(u8, arg, "-a") or std.mem.startsWith(u8, arg, "--access")) {
+            new_host.access = args[arg_i + 1];
+            arg_i += 2;
+        } else if (std.mem.startsWith(u8, arg, "-u") or std.mem.startsWith(u8, arg, "--username")) {
+            new_host.username = args[arg_i + 1];
+            arg_i += 2;
+        } else if (std.mem.startsWith(u8, arg, "-p") or std.mem.startsWith(u8, arg, "--password")) {
+            new_host.password = args[arg_i + 1];
+            arg_i += 2;
         } else {
             std.debug.print("Unrecognized argument: '{s}'\n{s}", .{ arg, Add_Usage_Text });
             std.process.exit(1);
         }
     }
+    return new_host;
 }
 
 fn parseCmd(list: *[]const u8, cmd: []const u8) !void {
