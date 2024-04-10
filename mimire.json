@@ -1,0 +1,6 @@
+{
+    "os": "windows",
+    "ip_address": "172.16.5.5",
+    "hostname": "DC01",
+    "domain": "midgard.lan"
+}

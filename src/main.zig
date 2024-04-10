@@ -1,6 +1,7 @@
 const std = @import("std");
+const Managed = @import("json_wrapper.zig").Managed;
 
-const Host = struct { ip_address: []const u8, hostname: []const u8, os: []const u8, domain: []const u8, access: bool };
+const Host = struct { os: []const u8, ip_address: []const u8, hostname: []const u8, domain: []const u8 };
 
 const Usage_Text =
     \\Usage: mimire [options] <command> ...
@@ -46,6 +47,14 @@ pub fn main() !void {
     const stdout = stdout_bw.writer();
     _ = stdout;
 
+    // Read and parse the mimire.json file
+    const parse_file = try parseJson("/home/bytefl0w/.local/mimire.json", arena);
+    _ = parse_file;
+    //std.debug.print("TESTING\nIP_ADDRESS: {s}\n", .{parse_file.value.ip_address});
+
+    //TODO: Now write to the mimire.json file (Just overwrite it completely since we
+    //are reading in the whole thing)
+
     var arg_i: usize = 1;
     while (arg_i < args.len) : (arg_i += 1) {
         const arg = args[arg_i];
@@ -55,7 +64,7 @@ pub fn main() !void {
 
         if (std.mem.startsWith(u8, arg, "add")) {
             // This part will parse out what the subcommand is
-            try add_host(args);
+            _ = try add_host(args);
             break;
         } else if (std.mem.startsWith(u8, arg, "-h") or std.mem.startsWith(u8, arg, "--help")) {
             std.debug.print(Usage_Text, .{});
@@ -68,7 +77,7 @@ pub fn main() !void {
 }
 
 fn add_host(args: [][:0]u8) !Host {
-    var new_host = Host{ .os = undefined, .domain = undefined, .access = undefined, .ip_address = undefined, .hostname = undefined };
+    var new_host = Host{ .os = undefined, .domain = undefined, .ip_address = undefined, .hostname = undefined };
 
     var arg_i: usize = 2;
     while (arg_i < args.len) : (arg_i += 1) {
@@ -81,14 +90,14 @@ fn add_host(args: [][:0]u8) !Host {
         } else if (std.mem.startsWith(u8, arg, "-d") or std.mem.startsWith(u8, arg, "--domain")) {
             new_host.domain = args[arg_i + 1];
             arg_i += 2;
-        } else if (std.mem.startsWith(u8, arg, "-a") or std.mem.startsWith(u8, arg, "--access")) {
-            new_host.access = args[arg_i + 1];
+            //} else if (std.mem.startsWith(u8, arg, "-a") or std.mem.startsWith(u8, arg, "--access")) {
+            //    new_host.access = true; //TODO: change this
+            //    arg_i += 2;
+        } else if (std.mem.startsWith(u8, arg, "-h") or std.mem.startsWith(u8, arg, "--hostname")) {
+            new_host.hostname = args[arg_i + 1];
             arg_i += 2;
-        } else if (std.mem.startsWith(u8, arg, "-u") or std.mem.startsWith(u8, arg, "--username")) {
-            new_host.username = args[arg_i + 1];
-            arg_i += 2;
-        } else if (std.mem.startsWith(u8, arg, "-p") or std.mem.startsWith(u8, arg, "--password")) {
-            new_host.password = args[arg_i + 1];
+        } else if (std.mem.startsWith(u8, arg, "-o") or std.mem.startsWith(u8, arg, "--os")) {
+            new_host.os = args[arg_i + 1];
             arg_i += 2;
         } else {
             std.debug.print("Unrecognized argument: '{s}'\n{s}", .{ arg, Add_Usage_Text });
@@ -96,6 +105,20 @@ fn add_host(args: [][:0]u8) !Host {
         }
     }
     return new_host;
+}
+
+fn parseJson(file_path: []const u8, allocator: std.mem.Allocator) !Managed(Host) {
+    const file = try std.fs.openFileAbsolute(file_path, .{});
+    defer file.close();
+
+    var buffered = std.io.bufferedReader(file.reader());
+    var reader = std.json.reader(allocator, buffered.reader());
+    defer reader.deinit();
+
+    const parsed = try std.json.parseFromTokenSource(Host, allocator, &reader, .{
+        .allocate = .alloc_always,
+    });
+    return Managed(Host).fromJson(parsed);
 }
 
 fn parseCmd(list: *[]const u8, cmd: []const u8) !void {
